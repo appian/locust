@@ -445,7 +445,7 @@ class StatsEntry(object):
             window = int(elapsed_time)
         else:
             window = CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW
-        
+
         for i in xrange(9):
             acceptable_timestamps.append(t-window-i)
             acceptable_timestamps.append(t-window+i)
@@ -497,7 +497,13 @@ class StatsEntry(object):
         for perc, _desc, fmt in percentiles_to_report:
             values.append(percentile_helper(perc))
             formatter.append(fmt+'d')
-        
+        '''
+        For the case where there is a None for the calculated percentiles,
+        we skip logging the metric instead of failing hard, so that other
+        metrics will still be written to the log
+        '''
+        if None in values:
+            return
         col_sep = "," if csv_format else " "
         tpl = tpl_stub + col_sep.join(formatter)
 
@@ -811,10 +817,11 @@ def distribution_csv(append_file=False, get_current=False, include_totals=True):
     elapsed_time = int(time.time()) - runners.locust_runner.runner_start_time
     for s in chain(sort_stats(runners.locust_runner.request_stats), maybe_agg_stats):
         if s.num_requests:
-            rows.append(s.percentile(elapsed_time=elapsed_time,
+            calculated_percentile = s.percentile(elapsed_time=elapsed_time,
                                      csv_format=True,
                                      get_current=get_current)
-                        )
+            if calculated_percentile:
+                rows.append(calculated_percentile)
         else:
             rows.append('"%s",0,%i,' + "".join(["N/A"]*len(percentiles_to_report)) % (s.name,elapsed_time))
 
