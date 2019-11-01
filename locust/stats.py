@@ -819,7 +819,7 @@ def distribution_csv(append_file=False, get_current=False, include_totals=True):
             if calculated_percentile:
                 rows.append(calculated_percentile)
         else:
-            rows.append('"%s",0,%i,' + "".join(["N/A"]*len(percentiles_to_report)) % (s.name,elapsed_time))
+            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
 
     return "\n".join(rows)
 
